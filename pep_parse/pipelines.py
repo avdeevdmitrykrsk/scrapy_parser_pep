@@ -33,5 +33,3 @@ class PepParsePipeline:
             writer.writerow(
                 {'Статус': 'Total', 'Количество': sum(self.results.values())}
             )
-
-        self.session.close()
