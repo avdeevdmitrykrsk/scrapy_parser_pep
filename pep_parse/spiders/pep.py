@@ -22,5 +22,5 @@ class PepSpider(scrapy.Spider):
             name=page_title.split(' – ')[-1],
             status=response.css(
                 'dt:contains("Status") + dd > abbr::text'
-            ).get()
+            ).get().strip()
         )

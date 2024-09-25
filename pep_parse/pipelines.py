@@ -1,13 +1,14 @@
 import csv
 import datetime as dt
-from pprint import pprint
-from itemadapter import ItemAdapter
-from scrapy.exceptions import DropItem
-from sqlalchemy import create_engine, Column, Date, Integer, String, func
+from sqlalchemy import create_engine, Column, Integer, String, func
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Session
 
 Base = declarative_base()
+
+time_now = dt.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+BASE_DIR = 'results/'
+FILE_NAME = f'status_summary_{time_now}.csv'
 
 
 class PepParse(Base):
@@ -43,7 +44,7 @@ class PepParsePipeline:
         )
 
         with open(
-            'results/status_summary_%(time)s.csv',
+            BASE_DIR / FILE_NAME,
             mode='w', newline='', encoding='utf-8'
         ) as f:
             fieldnames = ['Статус', 'Количество']
