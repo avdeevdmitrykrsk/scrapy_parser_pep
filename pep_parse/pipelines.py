@@ -1,61 +1,37 @@
 import csv
 import datetime as dt
-from sqlalchemy import create_engine, Column, Integer, String, func
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import Session
+from collections import defaultdict
 
-Base = declarative_base()
 
 time_now = dt.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
 BASE_DIR = 'results/'
 FILE_NAME = f'status_summary_{time_now}.csv'
 
 
-class PepParse(Base):
-    __tablename__ = 'pep'
-    id = Column(Integer, primary_key=True)
-    number = Column(Integer, unique=True)
-    name = Column(String(200))
-    status = Column(String(20))
-
-
 class PepParsePipeline:
 
     def open_spider(self, spider):
-        engine = create_engine('sqlite:///sqlite.db')
-        Base.metadata.create_all(engine)
-        self.session = Session(engine)
+        self.results = defaultdict(int)
 
     def process_item(self, item, spider):
-        pep = PepParse(
-            number=item['number'],
-            name=item['name'],
-            status=item['status'],
-        )
-        self.session.add(pep)
-        self.session.commit()
+        self.results[item['status']] += 1
         return item
 
     def close_spider(self, spider):
-        all_peps = dict(
-            self.session.query(
-                PepParse.status, func.count(PepParse.id)
-            ).group_by(PepParse.status).all()
-        )
 
         with open(
-            BASE_DIR / FILE_NAME,
+            f'{BASE_DIR}/{FILE_NAME}',
             mode='w', newline='', encoding='utf-8'
         ) as f:
             fieldnames = ['Статус', 'Количество']
             writer = csv.DictWriter(f, fieldnames=fieldnames)
             writer.writeheader()
-            for status, count in all_peps.items():
+            for status, count in self.results.items():
                 writer.writerow(
                     {'Статус': status, 'Количество': count}
                 )
             writer.writerow(
-                {'Статус': 'Total', 'Количество': sum(all_peps.values())}
+                {'Статус': 'Total', 'Количество': sum(self.results.values())}
             )
 
         self.session.close()
